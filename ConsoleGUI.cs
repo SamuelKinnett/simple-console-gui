@@ -4,20 +4,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-public enum BorderStyles
-{
-    none,
-    oneLine,
-    twoLine,
-}
-
-namespace broadside_client_windows
+namespace simple_console_gui
 {
     /// <summary>
     /// This class provides methods to create and manage GUI-like elements in a console environment.
     /// </summary>
     public class ConsoleGUI
     {
+		
+		#region ConsoleGUI base class
 
         ConsoleRenderer consoleRenderer;
         List<Element> screen;
@@ -36,6 +31,8 @@ namespace broadside_client_windows
             numberOfElements = -1;
             activeElement = -1;
             this.screenColour = screenColour;
+			Console.BackgroundColor = screenColour;
+			Console.Clear ();
         }
 
         /// <summary>
@@ -73,6 +70,10 @@ namespace broadside_client_windows
             }
         }
 
+		#endregion 
+
+		#region Element
+
         /// <summary>
         /// This class provides the basic features of a GUI element that can then be inherited from.
         /// </summary>
@@ -96,6 +97,10 @@ namespace broadside_client_windows
                 //Used to stop the abstract class being instantiated
             }
         }
+
+		#endregion
+
+		#region Log Box
 
         /// <summary>
         /// This class fulfils the same basic purpose as the standard console; it stores lines in a buffer that can then be rendered.
@@ -199,5 +204,92 @@ namespace broadside_client_windows
             {
             }
         }
+
+        #endregion
+
+		#region Picture Box
+
+		/// <summary>
+		/// A structure used to store image data, such as ASCII art or a game map.
+		/// </summary>
+		public struct Image
+		{
+			public int width;
+			public int height;
+			public char[] imageData;
+			public int[] imageColour;
+			public int[] imageBackColour;
+		}
+
+		public class PictureBox : Element
+		{
+			Image image; //stores the image to be rendered in the format [character] [colour]
+
+			int imageX;	//The x position of the area of the image being rendered
+			int imageY;	//The y position of the area of the image being rendered
+			int zoomLevel;	//How 'far out' the image is zoomed, e.g. 1 = actual size, 2 = 50%, 4 = 25% etc.
+
+
+			public PictureBox(int x, int y, int width, int height, BorderStyles border = BorderStyles.none, ConsoleColor foreColour = ConsoleColor.White, Image image = new Image())
+			{
+				this.xPosition = x;
+				this.yPosition = y;
+				this.width = width;
+				this.height = height;
+				this.border = border;
+				this.foreColour = foreColour;
+				this.image = image;
+
+				imageX = 0;
+				imageY = 0;
+			}
+
+			public override void DrawElement (ConsoleRenderer consoleRenderer)
+			{
+				if (border == BorderStyles.none) {
+					DrawImage (0, consoleRenderer);
+				} else {
+					consoleRenderer.DrawBox (xPosition, yPosition, width, height, border, foreColour, ConsoleColor.Black);
+					DrawImage (1, consoleRenderer);
+				}
+			}
+
+			private void DrawImage(int borderOffset, ConsoleRenderer consoleRenderer)
+			{
+				int imageBufferSize = image.width * image.height;
+
+				for (int posX = xPosition + borderOffset; posX < width - borderOffset; posX++) {
+					for (int posY = yPosition + borderOffset; posY < height - borderOffset; posY++) {
+						try {
+							char charToWrite = image.imageData[(image.width * (posY + imageY)) + (posX + imageX)];
+							ConsoleColor colourToWrite = (ConsoleColor)image.imageColour[(image.width * (posY + imageY)) + (posX + imageX)];
+							ConsoleColor backColourToWrite = (ConsoleColor)image.imageBackColour[(image.width * (posY + imageY)) + (posX + imageX)];
+							consoleRenderer.WriteString(posX, posY, charToWrite.ToString(), colourToWrite, backColourToWrite);
+						} catch {
+							consoleRenderer.WriteString (posX, posY, " ", ConsoleColor.Black, ConsoleColor.Black);
+						}
+					}
+				}
+			}
+
+			public override void DeleteElement ()
+			{
+				throw new NotImplementedException ();
+			}
+
+			public override string Interact ()
+			{
+				throw new NotImplementedException ();
+			}
+
+			public override void Update ()
+			{
+				throw new NotImplementedException ();
+			}
+
+		}
+
+		#endregion
+
     }
 }

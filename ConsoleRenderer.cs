@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 
-namespace broadside_client_windows
+namespace simple_console_gui
 {
     public class ConsoleRenderer
     {
